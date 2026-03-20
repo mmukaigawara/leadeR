@@ -11,7 +11,6 @@ implementing Leadership Trait Analysis (LTA) and Operational Code
 Analysis (OCA). You provide text data and the package performs the
 analyses.
 }
-}
 \author{
 \strong{Maintainer}: Mitsuru Mukaigawara \email{mitsuru_mukaigawara@g.harvard.edu} (\href{https://orcid.org/0000-0001-6530-2083}{ORCID})
 
