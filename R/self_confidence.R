@@ -4,14 +4,23 @@
 # 2. Added verb-based detection for condition (a) - self as instigator
 # 3. Better authority/leadership phrase detection
 
-library(spacyr)
-library(dplyr)
-library(stringr)
-library(tidyr)
-library(stringi)
-
 pronouns <- c("i", "me", "my", "mine", "myself")
 
+#' Compute self-confidence scores
+#'
+#' Classifies first-person pronoun occurrences in the text as self-confident
+#' (SC) or other-self-confident (OSC) based on sentence-level context patterns
+#' covering three conditions: self as instigator, self as authority, and self
+#' as recipient of positive recognition.
+#'
+#' @param text A character string containing the speech text to analyse.
+#' @param bootstrap Logical; if \code{TRUE}, return bootstrapped mean and
+#'   variance estimates. Default is \code{FALSE}.
+#' @param B Integer; number of bootstrap replicates. Default is 1000.
+#' @return A one-row \code{\link[tibble]{tibble}}. When \code{bootstrap = FALSE},
+#'   columns are \code{SC} and \code{OSC}. When \code{bootstrap = TRUE}, columns
+#'   are \code{meanSC}, \code{meanOSC}, \code{varSC}, \code{varOSC}.
+#' @export
 get_conf <- function(text, bootstrap = FALSE, B = 1000) {
 
   # Parse text to tokens with spaCy
@@ -49,10 +58,7 @@ get_conf <- function(text, bootstrap = FALSE, B = 1000) {
       s <- tolower(sentence)
 
       # Condition A: Self as instigator of activity
-      # Codebook examples: "I think we should...", "I am going to...", "This is my plan..."
-      # EXPANDED patterns for instigating/planning actions
       a_patterns <- c(
-        # Direct action statements with future/modal verbs
         "\\bi (will|shall|am going to|plan to|intend to|propose to|am prepared to|am ready to|am determined to|have decided to)\\b",
         "\\bi (think|believe|feel|am convinced|am confident|am certain|am sure) (we|that we|that this|that the|this|it)\\b",
         "\\bi (want|would like|hope|expect|anticipate) (to|us to|that we|that this)\\b",
@@ -64,17 +70,11 @@ get_conf <- function(text, bootstrap = FALSE, B = 1000) {
         "\\bunder my (leadership|direction|guidance|administration)\\b",
         "\\bi (will|shall) (do|make|take|give|provide|ensure|see to it)\\b",
         "\\bi (have|'ve) (taken|made|given|done|initiated|started|begun|launched)\\b",
-        # Action verbs showing initiative - past tense (I did something)
         "\\bi (addressed|visited|met|spoke|talked|presented|announced|signed|called|ordered|directed|led|conducted|organized|hosted|convened|chaired|launched|initiated|established|created|built|developed|achieved|accomplished|completed|finished|delivered|sent|submitted|issued)\\b",
-        # Action verbs showing initiative - present tense (I do something)
         "\\bi (address|visit|meet|speak|talk|present|announce|sign|call|order|direct|lead|conduct|organize|host|convene|chair|launch|initiate|establish|create|build|develop|achieve|accomplish|complete|finish|deliver|send|submit|issue)\\b",
-        # "I call on/upon" patterns for exhortation
         "\\bi call (on|upon)\\b",
-        # Saluting/welcoming (authority gestures)
         "\\bi (salute|welcome|greet|congratulate|commend|thank|acknowledge)\\b",
-        # Let me + action verb
         "\\blet me (salute|welcome|greet|congratulate|commend|thank|acknowledge|address|explain|clarify|begin|start|say|tell|remind|emphasize|stress|point out|note|add|turn)\\b",
-        # ADDED: Simple assertive statements
         "\\bi know (that|what|how|we|the)\\b",
         "\\bi see (this|that|it|an|a|the)\\b",
         "\\bi understand (that|the|this)\\b",
@@ -90,8 +90,6 @@ get_conf <- function(text, bootstrap = FALSE, B = 1000) {
       )
 
       # Condition B: Self as authority figure
-      # Codebook examples: "If it were up to me...", "Let me explain...", "My position was accepted"
-      # EXPANDED patterns for authority/control
       b_patterns <- c(
         "\\bif it were up to me\\b",
         "\\bif i had my way\\b",
@@ -113,8 +111,6 @@ get_conf <- function(text, bootstrap = FALSE, B = 1000) {
       )
 
       # Condition C: Self as recipient of positive reward/recognition
-      # Codebook examples: "I am honored...", "You flatter me...", "I was chosen..."
-      # EXPANDED patterns for praise/recognition
       c_patterns <- c(
         "\\bi (am|'m|was|feel|felt) (honored|honoured|privileged|proud|grateful|thankful|blessed|humbled|flattered|pleased|delighted|thrilled)\\b",
         "\\bhonor(ed|s)? me\\b",
@@ -159,30 +155,30 @@ get_conf <- function(text, bootstrap = FALSE, B = 1000) {
       return(output)
     } else {
       count_by_sentence <- pronoun_classified |>
-        group_by(sentence_id) |>
-        count(conf) |>
+        dplyr::group_by(sentence_id) |>
+        dplyr::count(conf) |>
         tidyr::complete(conf = c("SC", "OSC"), fill = list(n = 0)) |>
         tidyr::pivot_wider(names_from = conf, values_from = n) |>
         dplyr::select(sentence_id, SC, OSC)
 
       boot_results <- purrr::map_dfr(1:B, ~{
         sampled_id <- sentences$sentence_id[sample(nrow(sentences), replace = TRUE)]
-        sample_df <- tibble(sentence_id = sampled_id)
+        sample_df <- tibble::tibble(sentence_id = sampled_id)
 
         own_sentences_sampled <- sample_df |>
-          inner_join(count_by_sentence, by = "sentence_id", relationship = "many-to-many")
+          dplyr::inner_join(count_by_sentence, by = "sentence_id", relationship = "many-to-many")
 
         if (nrow(own_sentences_sampled) == 0) {
           tibble::tibble(SC = 0, OSC = 0)
         } else {
           own_sentences_sampled |>
-            summarise(SC = sum(SC), OSC = sum(OSC))
+            dplyr::summarise(SC = sum(SC), OSC = sum(OSC))
         }
       })
 
       boot_results |>
         dplyr::summarise(meanSC = mean(SC), meanOSC = mean(OSC),
-                        varSC = var(SC), varOSC = var(OSC))
+                        varSC = stats::var(SC), varOSC = stats::var(OSC))
     }
   }
 }

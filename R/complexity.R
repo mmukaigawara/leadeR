@@ -4,12 +4,6 @@
 # 2. Added more temporal/occasional phrases
 # 3. Better handling of word stems to catch variations
 
-library(spacyr)
-library(dplyr)
-library(stringr)
-library(tidyr)
-library(stringi)
-
 # HC STEMS - Full original list (bias was +8.68, targeting near-zero)
 hc_stems <- c(
   # Core HC words from codebook (Line 32)
@@ -123,32 +117,49 @@ low_complexity <- unique(c(
 # REGEX BUILDERS
 # ----------------------------
 
+#' Prepare word-stem regex pattern
+#' @param stems Character vector of word stems.
+#' @return A single regex string.
+#' @keywords internal
 prep_wordstem_regex <- function(stems) {
   stems <- stems[order(-nchar(stems))]
-  stems <- str_replace_all(stems, "\\.", "\\\\.")
-  stems <- str_replace_all(stems, "\\s+", "")
+  stems <- stringr::str_replace_all(stems, "\\.", "\\\\.")
+  stems <- stringr::str_replace_all(stems, "\\s+", "")
   paste0("(?i)\\b(", paste(stems, collapse = "|"), ")\\p{L}*\\b")
 }
 
+#' Prepare phrase regex pattern
+#' @param phrases Character vector of phrases.
+#' @return A single regex string.
+#' @keywords internal
 prep_phrase_regex <- function(phrases) {
   phrases <- phrases[order(-nchar(phrases))]
-  phrases <- str_replace_all(phrases, "\\.", "\\\\.")
-  phrases <- str_replace_all(phrases, "\\s+", " ")
-  phrases <- str_replace_all(phrases, " ", "\\\\s+")
+  phrases <- stringr::str_replace_all(phrases, "\\.", "\\\\.")
+  phrases <- stringr::str_replace_all(phrases, "\\s+", " ")
+  phrases <- stringr::str_replace_all(phrases, " ", "\\\\s+")
+
   paste0("(?i)\\b(", paste(phrases, collapse = "|"), ")\\b")
 }
 
+#' Prepare exact-word regex pattern
+#' @param words Character vector of words to match exactly.
+#' @return A single regex string.
+#' @keywords internal
 prep_exact_regex <- function(words) {
   words <- words[order(-nchar(words))]
-  words <- str_replace_all(words, "\\.", "\\\\.")
+  words <- stringr::str_replace_all(words, "\\.", "\\\\.")
   paste0("(?i)\\b(", paste(words, collapse = "|"), ")\\b")
 }
 
+#' Prepare low-complexity regex pattern
+#' @param items Character vector of low-complexity words and phrases.
+#' @return A single regex string.
+#' @keywords internal
 prep_lc_regex <- function(items) {
   items <- items[order(-nchar(items))]
-  items <- str_replace_all(items, "\\.", "\\\\.")
-  items <- str_replace_all(items, "\\s+", " ")
-  items <- str_replace_all(items, " ", "\\\\s+")
+  items <- stringr::str_replace_all(items, "\\.", "\\\\.")
+  items <- stringr::str_replace_all(items, "\\s+", " ")
+  items <- stringr::str_replace_all(items, " ", "\\\\s+")
   paste0("(?i)\\b(", paste(items, collapse = "|"), ")\\b")
 }
 
@@ -160,32 +171,44 @@ lc_pattern <- prep_lc_regex(low_complexity)
 # ----------------------------
 # QUOTE STRIPPING
 # ----------------------------
+
+#' Strip quoted text from a string
+#' @param x A character string.
+#' @return The string with quoted passages removed.
+#' @keywords internal
 strip_quoted <- function(x) {
   # Remove curly quotes
-  x <- str_replace_all(x, "[\u201C\u201D][^\u201C\u201D]*[\u201C\u201D]", " ")
+  x <- stringr::str_replace_all(x, "[\u201C\u201D][^\u201C\u201D]*[\u201C\u201D]", " ")
   # Remove straight double quotes
-  x <- str_replace_all(x, '"[^"]*"', " ")
+  x <- stringr::str_replace_all(x, '"[^"]*"', " ")
   # Remove single quotes (but be careful with apostrophes)
-  x <- str_replace_all(x, "'[^']*'", " ")
+  x <- stringr::str_replace_all(x, "'[^']*'", " ")
   x
 }
 
 # ----------------------------
 # NEGATION-AWARE COUNTING
 # ----------------------------
+
+#' Count valid (non-negated) pattern matches
+#' @param txt A character string to search.
+#' @param pattern A regex pattern to match.
+#' @param window_chars Integer; number of characters to look back for negation.
+#' @return Integer count of valid matches.
+#' @keywords internal
 count_valid <- function(txt, pattern, window_chars = 40) {
-  locs <- str_locate_all(txt, regex(pattern))[[1]]
+  locs <- stringr::str_locate_all(txt, stringr::regex(pattern))[[1]]
   if (nrow(locs) == 0) return(0L)
 
   valid <- 0L
   for (i in seq_len(nrow(locs))) {
     start <- locs[i, "start"]
     left <- substr(txt, max(1, start - window_chars), start - 1)
-    left <- str_to_lower(left)
+    left <- stringr::str_to_lower(left)
 
     # Check for negation
-    neg_ok <- str_detect(left, "\\b(not|no|never|none|n't)\\b\\s*$") ||
-      str_detect(left, "\\b(not|no|never|none|n't)\\b\\s+\\b\\w+\\b\\s*$")
+    neg_ok <- stringr::str_detect(left, "\\b(not|no|never|none|n't)\\b\\s*$") ||
+      stringr::str_detect(left, "\\b(not|no|never|none|n't)\\b\\s+\\b\\w+\\b\\s*$")
 
     if (!neg_ok) valid <- valid + 1L
   }
@@ -195,18 +218,36 @@ count_valid <- function(txt, pattern, window_chars = 40) {
 # ----------------------------
 # MAIN FUNCTION
 # ----------------------------
+
+#' Compute conceptual complexity scores
+#'
+#' Counts high-complexity (HC) and low-complexity (LC) markers in the text,
+#' using word stems, phrases, and exact words with negation-aware counting.
+#'
+#' @param text A character string containing the speech text to analyse.
+#' @param bootstrap Logical; if \code{TRUE}, return bootstrapped mean and
+#'   variance estimates. Default is \code{FALSE}.
+#' @param B Integer; number of bootstrap replicates. Default is 1000.
+#' @param quote_strip Logical; if \code{TRUE}, remove quoted text before
+#'   counting. Default is \code{TRUE}.
+#' @param window_chars Integer; number of characters to look back for
+#'   negation context. Default is 40.
+#' @return A one-row \code{\link[tibble]{tibble}}. When \code{bootstrap = FALSE},
+#'   columns are \code{HC} and \code{LC}. When \code{bootstrap = TRUE}, columns
+#'   are \code{meanHC}, \code{varHC}, \code{meanLC}, \code{varLC}.
+#' @export
 get_complex <- function(text, bootstrap = FALSE, B = 1000,
                        quote_strip = TRUE, window_chars = 40) {
 
   # Parse & make sentence text
   parsed <- spacyr::spacy_parse(text, dependency = FALSE, lemma = FALSE)
-  sentence_df <- parsed %>%
-    group_by(sentence_id) %>%
-    summarise(sentence_text = paste(token, collapse = " "), .groups = "drop")
+  sentence_df <- parsed |>
+    dplyr::group_by(sentence_id) |>
+    dplyr::summarise(sentence_text = paste(token, collapse = " "), .groups = "drop")
 
   classify_complexity <- function(txt) {
     speaker_txt <- if (quote_strip) strip_quoted(txt) else txt
-    speaker_txt <- str_to_lower(speaker_txt)
+    speaker_txt <- stringr::str_to_lower(speaker_txt)
 
     # Count HC from all three sources
     HC <- count_valid(speaker_txt, hc_stem_pattern, window_chars = window_chars) +
@@ -218,15 +259,15 @@ get_complex <- function(text, bootstrap = FALSE, B = 1000,
     list(HC = HC, LC = LC)
   }
 
-  results <- sentence_df %>%
-    rowwise() %>%
-    mutate(counts = list(classify_complexity(sentence_text))) %>%
-    mutate(HC = counts$HC, LC = counts$LC) %>%
-    ungroup() %>%
-    select(-counts)
+  results <- sentence_df |>
+    dplyr::rowwise() |>
+    dplyr::mutate(counts = list(classify_complexity(sentence_text))) |>
+    dplyr::mutate(HC = counts$HC, LC = counts$LC) |>
+    dplyr::ungroup() |>
+    dplyr::select(-counts)
 
   if (!bootstrap) {
-    return(tibble(
+    return(tibble::tibble(
       HC = sum(results$HC),
       LC = sum(results$LC)
     ))
@@ -238,9 +279,9 @@ get_complex <- function(text, bootstrap = FALSE, B = 1000,
     }, simplify = TRUE)
 
     boot_df <- as.data.frame(t(boot_counts))
-    return(tibble(
-      meanHC = mean(boot_df$HC), varHC = var(boot_df$HC),
-      meanLC = mean(boot_df$LC), varLC = var(boot_df$LC)
+    return(tibble::tibble(
+      meanHC = mean(boot_df$HC), varHC = stats::var(boot_df$HC),
+      meanLC = mean(boot_df$LC), varLC = stats::var(boot_df$LC)
     ))
   }
 }

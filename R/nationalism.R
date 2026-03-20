@@ -4,15 +4,6 @@
 # 2. Only counts GPE entities (countries) - not NORP/ORG
 # 3. Very conservative pronoun counting
 
-library(spacyr)
-library(dplyr)
-library(stringr)
-library(tibble)
-library(tidyr)
-library(data.table)
-
-source("code/det_lta/expand_aliases.R")
-
 # Modifier lists for own-country references
 favorable_descriptors <- c(
   "great", "good", "peace-loving", "progressive", "successful", "prosperous",
@@ -90,66 +81,82 @@ intl_orgs <- c(
   "security council", "general assembly"
 )
 
+#' Compute nationalism scores
+#'
+#' Classifies entity references in the text as nationalistic (N) or
+#' other-nationalistic (ON) based on own/other entity detection and
+#' contextual modifiers at the referent level.
+#'
+#' @param own_entity A character vector of entity names representing the
+#'   speaker's own country or group.
+#' @param text A character string containing the speech text to analyse.
+#' @param bootstrap Logical; if \code{TRUE}, return bootstrapped mean and
+#'   variance estimates. Default is \code{FALSE}.
+#' @param B Integer; number of bootstrap replicates. Default is 1000.
+#' @return A one-row \code{\link[tibble]{tibble}}. When \code{bootstrap = FALSE},
+#'   columns are \code{N} and \code{ON}. When \code{bootstrap = TRUE}, columns
+#'   are \code{meanN}, \code{meanON}, \code{varN}, \code{varON}.
+#' @export
 get_nat <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
 
   # Define own entity terms
   own_entity_terms <- unique(tolower(c(own_entity, expand_aliases_country(own_entity))))
 
   # Parse text
-  parsed <- spacy_parse(text, dependency = TRUE, entity = TRUE, tag = TRUE)
-  parsed <- parsed |> mutate(token_lower = tolower(token))
+  parsed <- spacyr::spacy_parse(text, dependency = TRUE, entity = TRUE, tag = TRUE)
+  parsed <- parsed |> dplyr::mutate(token_lower = tolower(token))
 
   # Get sentence text for context checking
   sentences <- parsed |>
-    group_by(sentence_id) |>
-    summarise(sentence = paste(token, collapse = " "), .groups = "drop")
+    dplyr::group_by(sentence_id) |>
+    dplyr::summarise(sentence = paste(token, collapse = " "), .groups = "drop")
 
   # STEP 1: Group multi-word entities into single referents
   # Use run-length encoding to group consecutive entity tokens
   # Only include GPE (countries) - ORG caused massive overcounting
   parsed <- parsed |>
-    mutate(
+    dplyr::mutate(
       is_gpe = grepl("GPE", entity),
       ent_group = data.table::rleid(is_gpe & !is.na(entity) & entity != "")
     )
 
   # Extract GPE entity phrases (grouped)
   gpe_entities <- parsed |>
-    filter(is_gpe) |>
-    group_by(doc_id, sentence_id, ent_group) |>
-    summarise(
+    dplyr::filter(is_gpe) |>
+    dplyr::group_by(doc_id, sentence_id, ent_group) |>
+    dplyr::summarise(
       phrase = paste(token_lower, collapse = " "),
-      first_token_id = first(token_id),
+      first_token_id = dplyr::first(token_id),
       .groups = "drop"
     ) |>
-    left_join(sentences, by = "sentence_id")
+    dplyr::left_join(sentences, by = "sentence_id")
 
   # STEP 2: Count own-reference pronouns - ONE per sentence (not per pronoun)
   # Pronouns only contribute to N (with nationalistic context), never to ON
   own_pronoun_refs <- parsed |>
-    filter(
+    dplyr::filter(
       token_lower %in% c("we", "our") &
       dep_rel %in% c("nsubj", "poss", "nsubjpass")
     ) |>
-    group_by(doc_id, sentence_id) |>
-    summarise(
+    dplyr::group_by(doc_id, sentence_id) |>
+    dplyr::summarise(
       phrase = "we/our",
-      first_token_id = first(token_id),
+      first_token_id = dplyr::first(token_id),
       .groups = "drop"
     ) |>
-    left_join(sentences, by = "sentence_id")
+    dplyr::left_join(sentences, by = "sentence_id")
 
   # STEP 3: Classify referents
 
   # Classify GPE entities as own or other
   if (nrow(gpe_entities) > 0) {
     gpe_entities <- gpe_entities |>
-      mutate(
+      dplyr::mutate(
         entity_type = ifelse(phrase %in% own_entity_terms, "own", "other"),
         is_pronoun = FALSE
       )
   } else {
-    gpe_entities <- tibble(
+    gpe_entities <- tibble::tibble(
       sentence_id = integer(), phrase = character(), first_token_id = integer(),
       sentence = character(), entity_type = character(), is_pronoun = logical()
     )
@@ -158,40 +165,38 @@ get_nat <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
   # Own pronouns are always "own" type and marked as pronouns
   if (nrow(own_pronoun_refs) > 0) {
     own_pronoun_refs <- own_pronoun_refs |>
-      mutate(entity_type = "own", is_pronoun = TRUE)
+      dplyr::mutate(entity_type = "own", is_pronoun = TRUE)
   } else {
-    own_pronoun_refs <- tibble(
+    own_pronoun_refs <- tibble::tibble(
       sentence_id = integer(), phrase = character(), first_token_id = integer(),
       sentence = character(), entity_type = character(), is_pronoun = logical()
     )
   }
 
   # Combine all referents
-  all_referents <- bind_rows(
-    gpe_entities |> select(sentence_id, phrase, first_token_id, sentence, entity_type, is_pronoun),
-    own_pronoun_refs |> select(sentence_id, phrase, first_token_id, sentence, entity_type, is_pronoun)
+  all_referents <- dplyr::bind_rows(
+    gpe_entities |> dplyr::select(sentence_id, phrase, first_token_id, sentence, entity_type, is_pronoun),
+    own_pronoun_refs |> dplyr::select(sentence_id, phrase, first_token_id, sentence, entity_type, is_pronoun)
   )
 
   if (nrow(all_referents) == 0) {
     if (bootstrap) {
-      return(tibble(meanN = 0, meanON = 0, varN = 0, varON = 0))
+      return(tibble::tibble(meanN = 0, meanON = 0, varN = 0, varON = 0))
     } else {
-      return(tibble(N = 0, ON = 0))
+      return(tibble::tibble(N = 0, ON = 0))
     }
   }
 
   # STEP 4: Apply N/ON classification based on context
-  # Key fix: Pronouns only count toward N (with nationalistic context), never toward ON
-  # This addresses the +12.88 ON overcounting bias
   classify_referent <- function(token_id, sent_id, ent_type, phrase, sentence_text, parsed_df, is_pron) {
 
     sent_tokens <- parsed_df |>
-      filter(sentence_id == sent_id) |>
-      mutate(token_lower = tolower(token))
+      dplyr::filter(sentence_id == sent_id) |>
+      dplyr::mutate(token_lower = tolower(token))
 
     # Find modifiers attached to this token via dependency
     modifiers <- sent_tokens |>
-      filter(head_token_id == token_id & dep_rel %in% c("amod", "advmod", "compound"))
+      dplyr::filter(head_token_id == token_id & dep_rel %in% c("amod", "advmod", "compound"))
 
     modifier_words <- tolower(modifiers$token)
 
@@ -214,14 +219,9 @@ get_nat <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
       has_strength <- any(context_words %in% strength_descriptors)
       has_honor <- any(sapply(national_honor_phrases, function(p) grepl(p, sentence_lower, fixed = TRUE)))
 
-      # If any national indicator present, classify as N
-      # NOTE: Removed the overly broad has_nation_noun check as it caused overcounting
       if (has_favorable || has_strength || has_honor) {
         return("N")
       } else {
-        # Pronouns without nationalistic context count toward ON (neutral national reference)
-        # Per codebook: "we/us/our counted if referring to ALL the people or WHOLE nation"
-        # When no nationalistic modifier present, it's still a reference to the nation
         return("ON")
       }
     } else {
@@ -240,42 +240,42 @@ get_nat <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
 
   # Apply classification
   referent_classified <- all_referents |>
-    rowwise() |>
-    mutate(
+    dplyr::rowwise() |>
+    dplyr::mutate(
       mod = classify_referent(first_token_id, sentence_id, entity_type, phrase, sentence, parsed, is_pronoun)
     ) |>
-    ungroup()
+    dplyr::ungroup()
 
   # STEP 5: Count N and ON
   output <- referent_classified |>
-    count(mod) |>
+    dplyr::count(mod) |>
     tidyr::complete(mod = c("N", "ON"), fill = list(n = 0)) |>
     tidyr::pivot_wider(names_from = mod, values_from = n)
 
   if (bootstrap) {
     sentence_summary <- referent_classified |>
-      group_by(sentence_id) |>
-      count(mod) |>
+      dplyr::group_by(sentence_id) |>
+      dplyr::count(mod) |>
       tidyr::complete(mod = c("N", "ON"), fill = list(n = 0)) |>
       tidyr::pivot_wider(names_from = mod, values_from = n)
 
     boot_results <- purrr::map_dfr(1:B, ~{
       sampled_ids <- sample(unique(sentences$sentence_id), replace = TRUE)
-      sample_df <- tibble(sentence_id = sampled_ids)
+      sample_df <- tibble::tibble(sentence_id = sampled_ids)
 
       sampled <- sample_df |>
-        inner_join(sentence_summary, by = "sentence_id", relationship = "many-to-many")
+        dplyr::inner_join(sentence_summary, by = "sentence_id", relationship = "many-to-many")
 
       if (nrow(sampled) == 0) {
-        tibble(N = 0, ON = 0)
+        tibble::tibble(N = 0, ON = 0)
       } else {
-        tibble(N = sum(sampled$N, na.rm = TRUE), ON = sum(sampled$ON, na.rm = TRUE))
+        tibble::tibble(N = sum(sampled$N, na.rm = TRUE), ON = sum(sampled$ON, na.rm = TRUE))
       }
     })
 
     btres <- boot_results |>
-      summarise(meanN = mean(N), meanON = mean(ON)) |>
-      mutate(varN = var(boot_results$N), varON = var(boot_results$ON))
+      dplyr::summarise(meanN = mean(N), meanON = mean(ON)) |>
+      dplyr::mutate(varN = stats::var(boot_results$N), varON = stats::var(boot_results$ON))
 
     return(btres)
   } else {

@@ -4,15 +4,6 @@
 # 2. Expanded OC verb list based on codebook Comment #1
 # 3. Properly counts ALL verbs where I/we is the direct subject
 
-library(spacyr)
-library(dplyr)
-library(stringr)
-library(tidyr)
-library(stringi)
-library(data.table)
-
-source("code/det_lta/expand_aliases.R")
-
 # OC verb list - based on codebook Comment #1:
 # "feeling," "thinking," "sensory," and "being" verbs
 # These are verbs that do NOT indicate the speaker is taking initiative or control
@@ -74,15 +65,26 @@ oc_verbs <- c(
   "condemn", "applaud", "commend", "salute"
 )
 
-# All entities
-country_list <- c(countries::list_countries(nomenclature = "name_en"))
-country_list <- unique(tolower(country_list))
-country_list <- c(country_list, "ussr", "east germany",
-                  "west germany", "soviet union", "the soviet union")
-country_list <- unlist(lapply(country_list, function(x) expand_aliases_country(x)))
-all_entities_corpus <- c(tolower(io), country_list)
-
+#' Compute control (need for power) scores
+#'
+#' Classifies verbs associated with first-person subjects as
+#' instrumental-control (IC) or other-control (OC) using dependency parsing
+#' to link subjects to their governing verbs.
+#'
+#' @param own_entity A character vector of entity names representing the
+#'   speaker's own country or group.
+#' @param text A character string containing the speech text to analyse.
+#' @param bootstrap Logical; if \code{TRUE}, return bootstrapped mean and
+#'   variance estimates. Default is \code{FALSE}.
+#' @param B Integer; number of bootstrap replicates. Default is 1000.
+#' @return A one-row \code{\link[tibble]{tibble}}. When \code{bootstrap = FALSE},
+#'   columns are \code{IC} and \code{OC}. When \code{bootstrap = TRUE}, columns
+#'   are \code{meanIC}, \code{meanOC}, \code{varIC}, \code{varOC}.
+#' @export
 get_ctrl <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
+
+  # Build entities corpus
+  all_entities_corpus <- build_entities_corpus()
 
   ## Define own pronouns (I/we and variants)
   own_pronouns <- c("i", "we")
@@ -94,55 +96,55 @@ get_ctrl <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
                    "state", "party", "congress", "people")
 
   # Parse text
-  parsed <- spacy_parse(text, dependency = TRUE, entity = TRUE, tag = TRUE)
-  parsed <- parsed |> mutate(token_lower = tolower(token))
+  parsed <- spacyr::spacy_parse(text, dependency = TRUE, entity = TRUE, tag = TRUE)
+  parsed <- parsed |> dplyr::mutate(token_lower = tolower(token))
 
   sentences <- parsed |>
-    group_by(sentence_id) |>
-    summarise(sentence = paste(token, collapse = " "), .groups = "drop")
+    dplyr::group_by(sentence_id) |>
+    dplyr::summarise(sentence = paste(token, collapse = " "), .groups = "drop")
 
   # NEW APPROACH: Find verbs where I/we OR self-referent noun is the subject
   # Step 1a: Find all pronouns I/we that are subjects (nsubj or nsubjpass)
   pronoun_subjects <- parsed |>
-    filter(token_lower %in% own_pronouns) |>
-    filter(dep_rel %in% c("nsubj", "nsubjpass"))
+    dplyr::filter(token_lower %in% own_pronouns) |>
+    dplyr::filter(dep_rel %in% c("nsubj", "nsubjpass"))
 
   # Step 1b: FIX - Find self-referent nouns preceded by "our/my" that are subjects
   parsed <- parsed |>
-    group_by(doc_id, sentence_id) |>
-    mutate(prev_token = lag(token_lower, default = "")) |>
-    ungroup()
+    dplyr::group_by(doc_id, sentence_id) |>
+    dplyr::mutate(prev_token = dplyr::lag(token_lower, default = "")) |>
+    dplyr::ungroup()
 
   self_noun_subjects <- parsed |>
-    filter(
+    dplyr::filter(
       # Possessive construct: "our government", "my country", etc.
       (token_lower %in% self_nouns & prev_token %in% c("our", "my")) |
       # Explicit country reference: "the United States", "America"
       (token_lower %in% own_entity_terms)
     ) |>
-    filter(dep_rel %in% c("nsubj", "nsubjpass"))
+    dplyr::filter(dep_rel %in% c("nsubj", "nsubjpass"))
 
   # Combine both types of subjects
-  all_subjects <- bind_rows(
-    pronoun_subjects |> select(doc_id, sentence_id, token, token_id, dep_rel, head_token_id),
-    self_noun_subjects |> select(doc_id, sentence_id, token, token_id, dep_rel, head_token_id)
+  all_subjects <- dplyr::bind_rows(
+    pronoun_subjects |> dplyr::select(doc_id, sentence_id, token, token_id, dep_rel, head_token_id),
+    self_noun_subjects |> dplyr::select(doc_id, sentence_id, token, token_id, dep_rel, head_token_id)
   )
 
   # Step 2: Get the verbs these subjects point to
-  verbs <- parsed |> filter(pos == "VERB")
+  verbs <- parsed |> dplyr::filter(pos == "VERB")
 
   # Join to find verbs with self-referent subjects
   own_verbs <- all_subjects |>
-    inner_join(
-      verbs |> select(sentence_id, token_id, verb_token = token, verb_lemma = lemma, verb_tag = tag, verb_dep = dep_rel),
+    dplyr::inner_join(
+      verbs |> dplyr::select(sentence_id, token_id, verb_token = token, verb_lemma = lemma, verb_tag = tag, verb_dep = dep_rel),
       by = c("sentence_id", "head_token_id" = "token_id")
     )
 
   if (nrow(own_verbs) == 0) {
     if (bootstrap) {
-      return(tibble(meanIC = 0, meanOC = 0, varIC = 0, varOC = 0))
+      return(tibble::tibble(meanIC = 0, meanOC = 0, varIC = 0, varOC = 0))
     } else {
-      return(tibble(IC = 0, OC = 0))
+      return(tibble::tibble(IC = 0, OC = 0))
     }
   }
 
@@ -151,8 +153,8 @@ get_ctrl <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     lemma <- tolower(lemma)
     token <- tolower(token)
 
-    sentence_tokens <- parsed_df %>% filter(sentence_id == !!sentence_id)
-    children <- sentence_tokens %>% filter(head_token_id == !!token_id)
+    sentence_tokens <- parsed_df |> dplyr::filter(sentence_id == !!sentence_id)
+    children <- sentence_tokens |> dplyr::filter(head_token_id == !!token_id)
 
     # 1. IGNORE AUXILIARIES
     if (dep_rel %in% c("aux", "auxpass")) {
@@ -198,48 +200,48 @@ get_ctrl <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
 
   # Apply classification to each verb with I/we subject
   verb_classified <- own_verbs |>
-    rowwise() |>
-    mutate(
+    dplyr::rowwise() |>
+    dplyr::mutate(
       ctrl = classify_verb(verb_lemma, verb_token, head_token_id,
                           verb_tag, verb_dep, sentence_id, parsed)
     ) |>
-    ungroup() |>
-    filter(!is.na(ctrl))
+    dplyr::ungroup() |>
+    dplyr::filter(!is.na(ctrl))
 
   # Count and reshape
   output <- verb_classified |>
-    count(ctrl) |>
+    dplyr::count(ctrl) |>
     tidyr::complete(ctrl = c("IC", "OC"), fill = list(n = 0)) |>
     tidyr::pivot_wider(names_from = ctrl, values_from = n)
 
   if (bootstrap) {
     if (nrow(verb_classified) == 0) {
-      btres <- tibble(meanIC = 0, meanOC = 0, varIC = 0, varOC = 0)
+      btres <- tibble::tibble(meanIC = 0, meanOC = 0, varIC = 0, varOC = 0)
     } else {
       sentence_summary <- verb_classified |>
-        group_by(sentence_id) |>
-        count(ctrl) |>
+        dplyr::group_by(sentence_id) |>
+        dplyr::count(ctrl) |>
         tidyr::complete(ctrl = c("IC", "OC"), fill = list(n = 0)) |>
         tidyr::pivot_wider(names_from = ctrl, values_from = n)
 
       boot_results <- purrr::map_dfr(1:B, ~{
         sampled_id <- sentences$sentence_id[sample(nrow(sentences), replace = TRUE)]
-        sample_df <- tibble(sentence_id = sampled_id)
+        sample_df <- tibble::tibble(sentence_id = sampled_id)
 
         own_sentences_sampled <- sample_df |>
-          inner_join(sentence_summary, by = "sentence_id", relationship = "many-to-many")
+          dplyr::inner_join(sentence_summary, by = "sentence_id", relationship = "many-to-many")
 
         if (nrow(own_sentences_sampled) == 0) {
-          tibble(IC = 0, OC = 0)
+          tibble::tibble(IC = 0, OC = 0)
         } else {
           own_sentences_sampled |>
-            summarise(IC = sum(IC), OC = sum(OC))
+            dplyr::summarise(IC = sum(IC), OC = sum(OC))
         }
       })
 
       btres <- boot_results |>
-        summarize(meanIC = mean(IC), meanOC = mean(OC)) |>
-        mutate(varIC = var(boot_results$IC), varOC = var(boot_results$OC))
+        dplyr::summarize(meanIC = mean(IC), meanOC = mean(OC)) |>
+        dplyr::mutate(varIC = stats::var(boot_results$IC), varOC = stats::var(boot_results$OC))
     }
 
     return(btres)
