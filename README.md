@@ -162,5 +162,5 @@ print(res_oca)
   meanP1 meanP2 meanP3 meanP4 meanP5 meanI1 meanI2 meanI3 meanI4a meanI4b
    <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>   <dbl>   <dbl>
 1  0.638  0.547  0.217  0.220  0.952  0.788  0.539  0.248   0.212   0.762
-# ℹ 46 more variables:...
+# ℹ 46 more variables: ...
 ```
