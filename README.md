@@ -47,7 +47,7 @@ library(leadeR)
 spacyr::spacy_initialize()
 ```
 
-### Leadership Trait Analysis (LTA) without 
+### 1. Leadership Trait Analysis (LTA) without bootstrapped confidence intervals (CIs)
 
 ```r
 # Analyze a leader's belief in their ability to control events
@@ -55,7 +55,23 @@ result <- get_power("Malawi", "We will help to improve relations with our neighb
 print(result)
 ```
 
-### Operational Code Analysis (OCA)
+### 2. Leadership Trait Analysis (LTA) with bootstrapped confidence intervals (CIs)
+
+```r
+# Analyze a leader's belief in their ability to control events
+result <- get_power("Malawi", "We will help to improve relations with our neighbors.")
+print(result)
+```
+
+### 3. Operational Code Analysis (OCA) without bootstrapped CIs
+
+```r
+# Perform Operational Code Analysis on a speech
+result <- get_opc("Malawi", "We will help to improve relations with our neighbors.")
+print(result)
+```
+
+### 4. Operational Code Analysis (OCA) with bootstrapped CIs
 
 ```r
 # Perform Operational Code Analysis on a speech
