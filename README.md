@@ -1,6 +1,18 @@
-# leadeR: Profiling Leaders at a Distance
+# leadeR <a href="https://github.com/mmukaigawara/leadeR"><img src="inst/figure/logo.png" align="right" height="200" /></a>
 
-The leadeR package profiles political leaders using text analysis, implementing Leadership Trait Analysis (LTA) and Operational Code Analysis (OCA). You provide text data and the package performs the analyses.
+<!-- badges: start
+[![CRAN
+status](https://www.r-pkg.org/badges/version/leadeR)](https://CRAN.R-project.org/package=leadeR)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/leadeR)](https://cran.r-project.org/package=leadeR)
+[![CRAN total
+downloads](https://cranlogs.r-pkg.org/badges/grand-total/leadeR)](https://cran.r-project.org/package=leadeR)
+badges: end -->
+
+The goal of the package
+[leadeR](https://github.com/mmukaigawara/leadeR) is to profile political leaders based on 
+Leadership Trait Analysis (LTA) and Operational Code Analysis (OCA). 
+Users provide text data and the package performs the analyses.
 
 ## Prerequisites
 
@@ -17,7 +29,9 @@ python -m spacy download en_core_web_sm
 
 ## Installation
 
-You can install leadeR from GitHub:
+You can install the package
+[leadeR](https://github.com/mmukaigawara/leadeR) from
+[GitHub](https://github.com/mmukaigawara/leadeR) with:
 
 ```r
 # install.packages("remotes")
@@ -33,7 +47,7 @@ library(leadeR)
 spacyr::spacy_initialize()
 ```
 
-### Leadership Trait Analysis (LTA)
+### Leadership Trait Analysis (LTA) without 
 
 ```r
 # Analyze a leader's belief in their ability to control events
@@ -48,17 +62,3 @@ print(result)
 result <- get_opc("Malawi", "We will help to improve relations with our neighbors.")
 print(result)
 ```
-
-## Exported Functions
-
-| Function | Description |
-|---|---|
-| `get_power()` | Belief in ability to control events (BACE) |
-| `get_dist()` | Distrust of others |
-| `get_nat()` | In-group bias / nationalism |
-| `get_aff()` | Need for affiliation |
-| `get_ctrl()` | Conceptual complexity (control) |
-| `get_complex()` | Conceptual complexity |
-| `get_task()` | Task orientation |
-| `get_conf()` | Self-confidence |
-| `get_opc()` | Operational Code Analysis |

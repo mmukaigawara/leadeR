@@ -485,7 +485,7 @@ nouns_promise <- c(
 #' @return A one-row \code{\link[tibble]{tibble}} with P1--P5, I1--I5, and
 #'   raw Self/Other counts by score category.
 #' @export
-get_opc <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
+get_oca <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
 
   # Build entities corpus
   all_entities_corpus <- build_entities_corpus()
