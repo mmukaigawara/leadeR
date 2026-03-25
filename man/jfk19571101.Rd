@@ -8,7 +8,7 @@
 A character string containing the full text of the speech.
 }
 \source{
-John F. Kennedy Presidential Library and Museum.
+\url{https://www.jfklibrary.org/archives/other-resources/john-f-kennedy-speeches/university-of-pennsylvania-19571101}
 }
 \usage{
 jfk19571101

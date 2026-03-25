@@ -47,6 +47,8 @@ Before using leadeR functions, initialize spaCy:
 ```r
 library(leadeR)
 spacyr::spacy_initialize()
+
+set.seed(02138)
 ```
 
 ### Data
