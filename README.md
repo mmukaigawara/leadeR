@@ -144,6 +144,36 @@ res_conf    <- get_conf(text = jfk, bootstrap = T, B = B) # Confidence
 res_task    <- get_task(text = jfk, bootstrap = T, B = B) # Task
 ```
 
+Finally, using the LTA traits, users can obtain the typology of leaders.
+To do so, the `type_lta()` function is employed.
+Notice that aggregation of the speech-level traits matters in leader classification.
+By default, the `precision_weighted` option is set to `FALSE`, which means that
+the function takes the simple average of each trait across speeches.
+When `precision_weighted = TRUE`, the function instead uses inverse-variance
+(precision) weighting via random-effects meta-analysis (`metafor::rma()`).
+This approach downweights speeches whose trait estimates have higher bootstrap
+variance, producing more reliable aggregate scores. Precision weighting
+requires that `get_lta()` was run with `bootstrap = TRUE` so that the
+variance columns (`varPp`, `varB`, etc.) are available.
+
+The function classifies the leader along three dimensions: constraint
+(Respect vs. Challenge), openness (Open vs. Closed), and motivation toward
+world (Cooperative vs. Competitive). It then maps constraint, openness, and
+task orientation to one of eight leadership styles. All classification
+thresholds are configurable; the defaults correspond to the norming sample.
+
+```r
+out_lta <- type_lta(res_lta, precision_weighted = T)
+out_lta[, c("constraint", "openness", "motivation_toward_world", "typology")]
+```
+
+```r
+# A tibble: 1 × 4
+  constraint openness motivation_toward_world typology
+  <chr>      <chr>    <chr>                   <chr>   
+1 Respect    Open     Cooperative             Reactive
+```
+
 ### Operational Code Analysis (OCA)
 
 For OCA, the `get_oca()` function generates the raw count measures as well as the 10 indices (I1-5 and P1-5).

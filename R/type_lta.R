@@ -77,8 +77,8 @@ type_lta <- function(lta,
       c(mu = as.numeric(fit$b), se = as.numeric(fit$se))
     }, numeric(2))
 
-    vals <- setNames(estimates[1, ], traits)
-    ses  <- setNames(estimates[2, ], paste0("se_", traits))
+    vals <- stats::setNames(estimates[1, ], traits)
+    ses  <- stats::setNames(estimates[2, ], paste0("se_", traits))
     out  <- tibble::as_tibble(c(as.list(vals), as.list(ses)))
 
   } else {
