@@ -47,7 +47,10 @@ library(leadeR)
 spacyr::spacy_initialize()
 ```
 
-### 1. Leadership Trait Analysis (LTA)
+### Data Generation
+
+
+### Leadership Trait Analysis (LTA)
 
 ```r
 # Power
@@ -74,7 +77,7 @@ res_task <- get_task(text = "We will help to improve relations with our neighbor
 print(res_task)
 ```
 
-### 2. Operational Code Analysis (OCA)
+### Operational Code Analysis (OCA)
 
 ```r
 # Perform Operational Code Analysis on a speech
