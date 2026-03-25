@@ -47,8 +47,24 @@ library(leadeR)
 spacyr::spacy_initialize()
 ```
 
-### Data Generation
+### Data
 
+The package includes a sample speech by John F. Kennedy (November 1, 1957):
+
+```r
+data(jfk19571101)
+nchar(jfk19571101)
+```
+
+### Preprocessing
+
+Clean transcript annotations before analysis:
+
+```r
+text <- clean_text("[Transcript begins] The president spoke [applause] clearly.")
+text
+#> [1] "The president spoke clearly."
+```
 
 ### Leadership Trait Analysis (LTA)
 

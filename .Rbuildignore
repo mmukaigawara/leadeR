@@ -4,3 +4,4 @@
 ^\.Rhistory$
 ^README\.md$
 ^LICENSE\.md$
+^data-raw$

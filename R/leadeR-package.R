@@ -21,7 +21,13 @@
 
 # Suppress R CMD check NOTEs for dplyr/tidyr NSE column references
 utils::globalVariables(c(
-  "A", "IC", "N", "OA", "OC", "ON", "OP", "OS", "OSC", "P", "S", "SC",
+  "A", "B", "C", "D", "HC", "IC", "IP", "LC", "N", "Na", "OA", "OC",
+  "ON", "OP", "OS", "OSC", "P", "Pp", "S", "SC", "Ss", "TI", "Ta",
+  "meanA", "meanHC", "meanIC", "meanIP", "meanLC", "meanN", "meanOA",
+  "meanOC", "meanON", "meanOP", "meanOS", "meanOSC", "meanP", "meanS",
+  "meanSC", "meanTI",
+  "varA", "varHC", "varIC", "varIP", "varLC", "varN", "varOA", "varOC",
+  "varON", "varOP", "varOS", "varOSC", "varP", "varS", "varSC", "varTI",
   "actor", "actor_id", "actor_norm", "affiliation", "agent_actor",
   "agent_norm", "agent_token", "amod_ner", "amod_phrase", "by_ner",
   "by_phrase", "conf", "conj_head", "conj_id", "country.name.en",

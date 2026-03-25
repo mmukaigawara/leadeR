@@ -14,6 +14,7 @@ Description: Profiling leaders at a distance.
     You provide the text data and the package performs
     Leadership Trait Analyses (LTA) and Operational Code Analyses (OCA).
 License: MIT + file LICENSE
+LazyData: true
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
