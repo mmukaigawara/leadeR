@@ -40,6 +40,8 @@ remotes::install_github("mmukaigawara/leadeR")
 
 ## Usage
 
+### Initialization
+
 Before using leadeR functions, initialize spaCy:
 
 ```r
@@ -49,54 +51,104 @@ spacyr::spacy_initialize()
 
 ### Data
 
-The package includes a sample speech by John F. Kennedy (November 1, 1957):
+The package includes a sample [speech][https://www.jfklibrary.org/archives/other-resources/john-f-kennedy-speeches/university-of-pennsylvania-19571101] by John F. Kennedy (November 1, 1957) as `jfk19571101`.
 
 ```r
-data(jfk19571101)
-nchar(jfk19571101)
+head(jfk19571101)
+```
+
+```r
+[1] "The theme of my remarks today is on the new dimensions of American Foreign Policy. 
+I realize only too well the twin perils of such a title. It either stimulates the hope 
+...
 ```
 
 ### Preprocessing
 
-Clean transcript annotations before analysis:
+Clean transcript annotations before analysis. The `clean_text()` function removes editorial annotations in brackets, parentheses, and curly braces from text, and then normalizes whitespace. Users might need to clean the text data further as needed.
 
 ```r
-text <- clean_text("[Transcript begins] The president spoke [applause] clearly.")
-text
-#> [1] "The president spoke clearly."
+jfk <- clean_text(jfk)
 ```
 
 ### Leadership Trait Analysis (LTA)
 
+Users can obtain LTA scores (e.g., P and OP for power) one by one. By default, the `bootstrap` option is set to be false. Users need to set `bootstrap = T` to generate bootstrapped confidence intervals. The number of iterations is `B = 1000` by default.
+
 ```r
-# Power
-res_power <- get_power(own_entity = "Malawi", 
-                       text = "We will help to improve relations with our neighbors.")
-print(res_power)
+res_nat     <- get_nat(own_entity = own_ent, text = jfk, bootstrap = T, B = B) # Nationalism
+res_ctrl    <- get_ctrl(own_entity = own_ent, text = jfk, bootstrap = T, B = B) # Control
+res_power   <- get_power(own_entity = own_ent, text = jfk, bootstrap = T, B = B) # Power
+res_aff     <- get_aff(own_entity = own_ent, text = jfk, bootstrap = T, B = B) # Affiliation
+res_dist    <- get_dist(own_entity = own_ent, text = jfk, bootstrap = T, B = B) # Distrust
+res_complex <- get_complex(text = jfk, bootstrap = T, B = B) # Complexity
+res_conf    <- get_conf(text = jfk, bootstrap = T, B = B) # Confidence
+res_task    <- get_task(text = jfk, bootstrap = T, B = B) # Task
+```
 
-# Affiliation
-res_aff <- get_aff(own_entity = "Malawi", 
-                   text = "We will help to improve relations with our neighbors.")
-print(res_aff)
+```r
+> print(res_nat)
+# A tibble: 1 × 4
+  meanN meanON  varN varON
+  <dbl>  <dbl> <dbl> <dbl>
+1  10.9   137.  10.0  203.
+> print(res_ctrl)
+# A tibble: 1 × 4
+  meanIC meanOC varIC varOC
+   <dbl>  <dbl> <dbl> <dbl>
+1   19.9   30.1  21.3  28.2
+> print(res_power)
+# A tibble: 1 × 4
+  meanP meanOP  varP varOP
+  <dbl>  <dbl> <dbl> <dbl>
+1  14.0   55.0  15.1  82.9
+> print(res_aff)
+# A tibble: 1 × 4
+  meanA meanOA  varA varOA
+  <dbl>  <dbl> <dbl> <dbl>
+1  2.10   32.1  1.98  25.0
+> print(res_dist)
+# A tibble: 1 × 4
+  meanS  varS meanOS varOS
+  <dbl> <dbl>  <dbl> <dbl>
+1  37.3  114.   155.  270.
+> print(res_complex)
+# A tibble: 1 × 4
+  meanHC varHC meanLC varLC
+   <dbl> <dbl>  <dbl> <dbl>
+1   227.  336.   125.  189.
+> print(res_conf)
+# A tibble: 1 × 4
+  meanSC meanOSC varSC varOSC
+   <dbl>   <dbl> <dbl>  <dbl>
+1   2.08    18.1  2.00   19.4
+> print(res_task)
+# A tibble: 1 × 4
+  meanTI varTI meanIP varIP
+   <dbl> <dbl>  <dbl> <dbl>
+1   145.  243.   52.9  51.8
+```
 
-# Distrust
-res_dist <- get_dist(own_entity = "Malawi",
-                     text = "We will help to improve relations with our neighbors.")
-print(res_dist)
+In practice, it is helpful to run these analyses all at once, with the combined scores such as `Na = meanN / (meanN + meanON)`. To do so, users can run the `get_lta()` function.
 
-# Complexity
-res_complex <- get_complex(text = "We will help to improve relations with our neighbors.")
-print(res_complex)
+```r
+res_lta <- get_lta(own_entity = own_ent, text = jfk, bootstrap = T, B = B)
+print(res_lta)
+```
 
-# Task
-res_task <- get_task(text = "We will help to improve relations with our neighbors.")
-print(res_task)
+The code generates all the raw scores as well as combined ones with their CIs (based on the Delta method).
+
+```r
+# A tibble: 1 × 50
+  meanP meanOP  varP varOP meanA meanOA  varA varOA meanS  varS meanOS
+  <dbl>  <dbl> <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>
+1  14.1   55.0  15.3  77.1  2.05   31.9  2.04  24.4  38.4  115.   155.
+# ℹ 39 more variables: ...
 ```
 
 ### Operational Code Analysis (OCA)
 
 ```r
-# Perform Operational Code Analysis on a speech
-result <- get_opc("Malawi", "We will help to improve relations with our neighbors.")
-print(result)
+res_oca <- get_oca(own_entity = own_ent, text = jfk, bootstrap = T, B = B)
+print(res_oca)
 ```
