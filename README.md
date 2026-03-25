@@ -51,7 +51,7 @@ spacyr::spacy_initialize()
 
 ### Data
 
-The package includes a sample [speech][https://www.jfklibrary.org/archives/other-resources/john-f-kennedy-speeches/university-of-pennsylvania-19571101] by John F. Kennedy (November 1, 1957) as `jfk19571101`.
+The package includes a sample [speech](https://www.jfklibrary.org/archives/other-resources/john-f-kennedy-speeches/university-of-pennsylvania-19571101) by John F. Kennedy (November 1, 1957) as `jfk19571101`.
 
 ```r
 head(jfk19571101)
