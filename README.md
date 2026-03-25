@@ -37,11 +37,3 @@ You can install the package
 # install.packages("remotes")
 remotes::install_github("mmukaigawara/leadeR")
 ```
-
-## Usage
-
-See the package vignettes for detailed walkthroughs:
-
-- [Installation, Initialization, and Data Cleaning](https://mmukaigawara.github.io/leadeR/articles/installation.html)
-- [Leadership Trait Analysis (LTA)](https://mmukaigawara.github.io/leadeR/articles/lta.html)
-- [Operational Code Analysis (OCA)](https://mmukaigawara.github.io/leadeR/articles/oca.html)
