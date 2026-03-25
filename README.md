@@ -76,6 +76,8 @@ jfk <- clean_text(jfk)
 Users can obtain LTA scores (e.g., P and OP for power) one by one. By default, the `bootstrap` option is set to be false. Users need to set `bootstrap = T` to generate bootstrapped confidence intervals. The number of iterations is `B = 1000` by default.
 
 ```r
+B = 1000
+
 res_nat     <- get_nat(own_entity = own_ent, text = jfk, bootstrap = T, B = B) # Nationalism
 res_ctrl    <- get_ctrl(own_entity = own_ent, text = jfk, bootstrap = T, B = B) # Control
 res_power   <- get_power(own_entity = own_ent, text = jfk, bootstrap = T, B = B) # Power
@@ -148,7 +150,17 @@ The code generates all the raw scores as well as combined ones with their CIs (b
 
 ### Operational Code Analysis (OCA)
 
+For OCA, the `get_oca()` function generates the raw count measures as well as the 10 indices (I1-5 and P1-5).
+
 ```r
 res_oca <- get_oca(own_entity = own_ent, text = jfk, bootstrap = T, B = B)
 print(res_oca)
+```
+
+```r
+# A tibble: 1 × 56
+  meanP1 meanP2 meanP3 meanP4 meanP5 meanI1 meanI2 meanI3 meanI4a meanI4b
+   <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>   <dbl>   <dbl>
+1  0.638  0.547  0.217  0.220  0.952  0.788  0.539  0.248   0.212   0.762
+# ℹ 46 more variables:...
 ```
