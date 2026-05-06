@@ -1,0 +1,180 @@
+---
+title: "Leadership Trait Analysis (LTA)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Leadership Trait Analysis (LTA)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This vignette walks through Leadership Trait Analysis (LTA) with leadeR,
+from computing trait scores to classifying leaders into Hermann's typology.
+
+## Setup
+
+```{r}
+library(leadeR)
+library(data.table)
+
+spacyr::spacy_initialize()
+set.seed(02138)
+
+own_ent <- "United States"
+B <- 1000
+
+jfk1 <- clean_text(jfk19610120)
+jfk2 <- clean_text(jfk19610925)
+jfk3 <- clean_text(jfk19630610)
+```
+
+## Computing trait scores
+
+### All traits at once
+
+`get_lta()` computes all eight LTA traits in one call and returns a
+one-row tibble per speech. Set `bootstrap = TRUE` to obtain bootstrap
+means and delta-method variances for the trait proportions.
+
+```{r}
+res_lta <- data.table::rbindlist(
+  lapply(c(jfk1, jfk2, jfk3), function(x)
+    get_lta(own_entity = own_ent, text = x, bootstrap = TRUE, B = B))
+)
+
+print(res_lta)
+```
+
+The output includes:
+
+- **Bootstrap means and variances** for raw counts (e.g., `meanP`, `varP`,
+  `meanOP`, `varOP`)
+- **Trait proportions and their delta-method variances** (e.g., `Pp`,
+  `varPp`, `D`, `varD`, `C`, `varC`, `Ta`, `varTa`, `Ss`, `varSs`, `Na`,
+  `varNa`, `B`, `varB`)
+
+The seven trait proportions are:
+
+| Abbreviation | Trait                              |
+|--------------|------------------------------------|
+| `Pp`         | Need for power                     |
+| `B`          | Belief in ability to control events|
+| `C`          | Conceptual complexity              |
+| `Ss`         | Self-confidence                    |
+| `Ta`         | Task orientation                   |
+| `D`          | Distrust                           |
+| `Na`         | Nationalism (in-group bias)        |
+
+### Individual traits
+
+You can also compute traits one at a time:
+
+```{r}
+res_nat     <- get_nat(own_entity = own_ent, text = jfk1, bootstrap = TRUE, B = B)
+res_ctrl    <- get_ctrl(own_entity = own_ent, text = jfk1, bootstrap = TRUE, B = B)
+res_power   <- get_power(own_entity = own_ent, text = jfk1, bootstrap = TRUE, B = B)
+res_aff     <- get_aff(own_entity = own_ent, text = jfk1, bootstrap = TRUE, B = B)
+res_dist    <- get_dist(own_entity = own_ent, text = jfk1, bootstrap = TRUE, B = B)
+res_complex <- get_complex(text = jfk1, bootstrap = TRUE, B = B)
+res_conf    <- get_conf(text = jfk1, bootstrap = TRUE, B = B)
+res_task    <- get_task(text = jfk1, bootstrap = TRUE, B = B)
+```
+
+## Leader typology
+
+Using the per-speech LTA traits, `type_lta()` aggregates scores across
+speeches and classifies the leader into Hermann's typology.
+
+### Aggregation methods
+
+The way speech-level traits are aggregated matters for classification.
+`type_lta()` supports two approaches:
+
+**Simple mean** (`precision_weighted = FALSE`, the default):
+Takes the arithmetic mean of each trait across speeches. All speeches
+contribute equally regardless of how precisely each trait was estimated.
+
+**Precision-weighted mean** (`precision_weighted = TRUE`):
+Uses inverse-variance weighting via random-effects meta-analysis
+(`metafor::rma()` with REML). Speeches with lower bootstrap variance
+(i.e., more precisely estimated traits) receive higher weight. This
+requires that `get_lta()` was run with `bootstrap = TRUE` so that the
+variance columns (`varPp`, `varB`, etc.) are available.
+
+```{r}
+# Simple mean
+type_lta(res_lta)
+
+# Precision-weighted
+type_lta(res_lta, precision_weighted = TRUE)
+```
+
+### Classification dimensions
+
+`type_lta()` classifies the leader along three dimensions:
+
+**Constraint** (Respect vs. Challenge): Based on need for power (`Pp`)
+and belief in control (`B`). A leader who scores below both thresholds
+respects constraints; otherwise, they challenge constraints.
+
+**Openness** (Open vs. Closed): Based on conceptual complexity (`C`) and
+self-confidence (`Ss`). A leader is open to information if complexity
+exceeds self-confidence, or if both exceed their respective high
+thresholds.
+
+**Motivation toward world** (four categories): Based on distrust (`D`) and
+nationalism (`Na`):
+
+| Distrust | Nationalism | Motivation                      |
+|----------|-------------|---------------------------------|
+| Low      | Low         | Cooperative                     |
+| Low      | High        | Cooperative (in-group bias)     |
+| High     | Low         | Competitive (out-group focus)   |
+| High     | High        | Competitive                     |
+
+### Leadership styles
+
+Constraint, openness, and task orientation (`Ta`) map to one of eight
+leadership styles:
+
+| Constraint | Openness | Task orientation | Style           |
+|------------|----------|------------------|-----------------|
+| Challenge  | Closed   | Problem          | Expansionistic  |
+| Challenge  | Closed   | Relationship     | Evangelistic    |
+| Challenge  | Open     | Problem          | Incremental     |
+| Challenge  | Open     | Relationship     | Charismatic     |
+| Respect    | Closed   | Problem          | Directive       |
+| Respect    | Closed   | Relationship     | Consultative    |
+| Respect    | Open     | Problem          | Reactive        |
+| Respect    | Open     | Relationship     | Accommodative   |
+
+```{r}
+out_lta <- type_lta(res_lta, precision_weighted = TRUE)
+out_lta[, c("constraint", "openness", "motivation_toward_world", "typology")]
+```
+
+### Custom thresholds
+
+All classification thresholds are configurable. The defaults correspond to
+the norming sample:
+
+```{r}
+type_lta(
+  res_lta,
+  precision_weighted = TRUE,
+  need_for_power  = 0.50,
+  control         = 0.44,
+  complex_high    = 0.56,
+  confidence_high = 0.81,
+  task            = 0.59,
+  distrust        = 0.41,
+  ingroup         = 0.42
+)
+```

@@ -1,0 +1,83 @@
+---
+title: "Installation, Initialization, and Data Cleaning"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Installation, Initialization, and Data Cleaning}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Prerequisites
+
+leadeR relies on [spaCy](https://spacy.io/), a Python NLP library, via the
+[spacyr](https://spacyr.quanteda.io/) R package. You will need:
+
+- **Python** (3.8 or later)
+- **spaCy** with an English language model
+
+Install spaCy and the English model from a terminal:
+
+```bash
+pip install spacy
+python -m spacy download en_core_web_sm
+```
+
+## Installing leadeR
+
+Install leadeR from GitHub:
+
+```{r}
+# install.packages("remotes")
+remotes::install_github("mmukaigawara/leadeR")
+```
+
+## Initialization
+
+Before using any leadeR function, initialize spaCy and (optionally) set a
+seed for reproducibility of bootstrap results.
+
+```{r}
+library(leadeR)
+library(data.table)
+
+spacyr::spacy_initialize()
+
+set.seed(02138)
+```
+
+## Sample data
+
+The package ships with three speeches by John F. Kennedy:
+
+| Dataset          | Date               | Occasion                                    |
+|------------------|--------------------|---------------------------------------------|
+| `jfk19610120`    | January 20, 1961   | Inaugural Address                           |
+| `jfk19610925`    | September 25, 1961 | Address Before the UN General Assembly      |
+| `jfk19630610`    | June 10, 1963      | Commencement Address at American University |
+
+```{r}
+head(jfk19571101)
+```
+
+## Text cleaning
+
+Speech transcripts often contain editorial annotations in brackets,
+parentheses, or curly braces. The `clean_text()` function removes these
+and normalizes whitespace.
+
+```{r}
+jfk1 <- clean_text(jfk19610120)
+jfk2 <- clean_text(jfk19610925)
+jfk3 <- clean_text(jfk19630610)
+```
+
+Users may need additional cleaning steps depending on the source of their
+text data (e.g., removing headers, footers, or speaker labels).

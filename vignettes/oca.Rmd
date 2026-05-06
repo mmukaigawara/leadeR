@@ -1,0 +1,65 @@
+---
+title: "Operational Code Analysis (OCA)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Operational Code Analysis (OCA)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This vignette demonstrates Operational Code Analysis (OCA) with leadeR.
+
+## Setup
+
+```{r}
+library(leadeR)
+
+spacyr::spacy_initialize()
+set.seed(02138)
+
+own_ent <- "United States"
+B <- 1000
+
+jfk <- clean_text(jfk19571101)
+```
+
+## Computing OCA indices
+
+The `get_oca()` function computes the VICS (Verbs in Context System)
+operational code indices from text. It returns the 10 standard indices
+(P1--P5 and I1--I5) along with the underlying raw counts.
+
+Set `bootstrap = TRUE` to obtain bootstrap means and variances.
+
+```{r}
+res_oca <- get_oca(own_entity = own_ent, text = jfk, bootstrap = TRUE, B = B)
+print(res_oca)
+```
+
+### Philosophical beliefs (P indices)
+
+| Index | Description                                           |
+|-------|-------------------------------------------------------|
+| P1    | Nature of the political universe (friendly/hostile)   |
+| P2    | Realization of political values (optimism/pessimism)  |
+| P3    | Predictability of the political future                |
+| P4    | Control over historical development                   |
+| P5    | Role of chance                                        |
+
+### Instrumental beliefs (I indices)
+
+| Index | Description                                           |
+|-------|-------------------------------------------------------|
+| I1    | Strategic approach to goals (cooperative/conflictual) |
+| I2    | Intensity of tactics (cooperative/conflictual)        |
+| I3    | Risk orientation                                      |
+| I4    | Flexibility of tactics (a and b sub-indices)          |
+| I5    | Role of chance                                        |
