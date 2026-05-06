@@ -1,8 +1,4 @@
-# Self-confidence - IMPROVED VERSION
-# Key changes:
-# 1. Significantly expanded SC detection patterns for all three conditions
-# 2. Added verb-based detection for condition (a) - self as instigator
-# 3. Better authority/leadership phrase detection
+# Self-confidence
 
 pronouns <- c("i", "me", "my", "mine", "myself")
 

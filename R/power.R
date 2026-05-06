@@ -30,7 +30,7 @@ p_keywords <- c(
 #' @export
 get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
 
-  # ---- Own / other terms ----
+  # Own / other terms
   own_terms <- c(
     unique(tolower(own_entity)),
     "we", "our nation", "our country", "us",
@@ -46,7 +46,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
   own_terms  <- unique(c(tolower(own_terms), own_entity))
   own_terms_norm <- stringr::str_to_lower(stringr::str_replace(own_terms, "^the\\s+", ""))
 
-  # ---- Parse ----
+  # Parse
   parsed <- spacyr::spacy_parse(text, dependency = TRUE, entity = TRUE, tag = TRUE)
 
   if (nrow(parsed) == 0) {
@@ -54,12 +54,12 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     return(tibble::tibble(P = 0, OP = 0))
   }
 
-  # ---- Sentence strings ----
+  # Sentence strings
   sentences <- parsed |>
     dplyr::group_by(doc_id, sentence_id) |>
     dplyr::summarise(sentence = paste(token, collapse = " "), .groups = "drop")
 
-  # ---- Multiword entity grouping (contiguous entity tokens) ----
+  # Multiword entity grouping (contiguous entity tokens)
   parsed_entity_grouped <- parsed |>
     dplyr::mutate(ent_group = ifelse(!is.na(entity) & entity != "", 1L, NA_integer_)) |>
     dplyr::group_by(doc_id, sentence_id) |>
@@ -78,7 +78,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     dplyr::select(doc_id, sentence_id, token_id, entity_group_id) |>
     dplyr::distinct()
 
-  # ---- Possessive map: poss -> head noun (e.g., our -> government) ----
+  # Possessive map: poss -> head noun (e.g., our -> government)
   poss_map <- parsed |>
     dplyr::filter(dep_rel == "poss") |>
     dplyr::transmute(
@@ -89,7 +89,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     dplyr::filter(poss_lemma %in% c("my", "our", "their")) |>
     dplyr::distinct()
 
-  # ---- Helper: build phrase for an actor token_id in a sentence ----
+  # Helper: build phrase for an actor token_id in a sentence
   build_actor_phrase <- function(doc_id_, sentence_id_, actor_token_id_, parsed_df) {
     # Force evaluation of parameters
     doc_id_ <- doc_id_
@@ -138,7 +138,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     return(base)
   }
 
-  # ---- Build verb-level actor table ----
+  # Build verb-level actor table
   # (A) Active + passive subjects: nsubj/nsubjpass point to VERB via head_token_id
   verb_subjects <- parsed |>
     dplyr::filter(dep_rel %in% c("nsubj", "nsubjpass")) |>
@@ -176,9 +176,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
   verb_actors <- dplyr::bind_rows(verb_subjects, verb_agents) |>
     dplyr::distinct()
 
-  # ---- FIX 1: Propagate subjects through auxiliary chains ----
-  # When "We" → "will" → "help", propagate "We" to "help"
-  # This addresses the root cause: codebook treats "will help" as ONE verb phrase
+  # Propagate subjects through auxiliary chains
   aux_chains <- parsed |>
     dplyr::filter(dep_rel == "aux") |>
     dplyr::transmute(
@@ -203,8 +201,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
   verb_actors <- dplyr::bind_rows(verb_actors, aux_subjects) |>
     dplyr::distinct(doc_id, sentence_id, verb_id, .keep_all = TRUE)
 
-  # ---- FIX 2: Propagate subjects through xcomp (infinitive complements) ----
-  # "We want to help" → "help" (xcomp) should inherit "We" as actor
+  # Propagate subjects through xcomp (infinitive complements)
   xcomp_chains <- parsed |>
     dplyr::filter(dep_rel == "xcomp") |>
     dplyr::transmute(
@@ -227,8 +224,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
   verb_actors <- dplyr::bind_rows(verb_actors, xcomp_subjects) |>
     dplyr::distinct(doc_id, sentence_id, verb_id, .keep_all = TRUE)
 
-  # ---- FIX 3: Propagate subjects through conj (coordinated verbs) ----
-  # "We help and protect" → "protect" (conj) should inherit "We" as actor
+  # Propagate subjects through conj (coordinated verbs)
   conj_chains <- parsed |>
     dplyr::filter(dep_rel == "conj" & pos %in% c("VERB", "AUX")) |>
     dplyr::transmute(
@@ -270,7 +266,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     return(tibble::tibble(P = 0, OP = 0))
   }
 
-  # ---- Pull the verbs we will classify (verb_id = token_id) ----
+  # Pull the verbs we will classify (verb_id = token_id)
   verbs <- parsed |>
     dplyr::filter(pos %in% c("VERB", "AUX")) |>
     dplyr::transmute(
@@ -288,7 +284,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     return(tibble::tibble(P = 0, OP = 0))
   }
 
-  # ---- Classifier (your logic, but no sentence-level dropping) ----
+  # Classifier (your logic, but no sentence-level dropping)
   classify_power <- function(lemma, tag, sentence) {
     if (is.na(sentence) || is.na(lemma)) return(NA_character_)
 
@@ -300,9 +296,6 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     }
 
     # optional: drop bare infinitives like "to help" when it's just complement of "want/seek"
-    # (kept lightweight: your previous check was fragile; this avoids false drops)
-    # If you want to keep it, do it robustly via dependency patterns later.
-
     a <- stringr::str_detect(sentence, regex_a)
     b <- stringr::str_detect(sentence, regex_b)
     c <- stringr::str_detect(sentence, regex_c)
@@ -319,7 +312,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     dplyr::ungroup() |>
     dplyr::filter(!is.na(power))
 
-  # ---- Output ----
+  # Output
   if (nrow(verb_classified) == 0) {
 
     if (bootstrap) return(tibble::tibble(meanP = 0, meanOP = 0, varP = 0, varOP = 0))
@@ -339,7 +332,7 @@ get_power <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
 
     } else {
 
-      # ---- Bootstrap by sentence resampling ----
+      # Bootstrap by sentence resampling
       sentence_summary <- verb_classified |>
         dplyr::group_by(doc_id, sentence_id) |>
         dplyr::count(power) |>

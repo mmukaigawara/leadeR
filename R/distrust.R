@@ -1,13 +1,6 @@
-# Distrust - IMPROVED VERSION
-# Key changes:
-# 1. Removed blanket quote skipping - now only tracks quote context
-# 2. Per-ENTITY S/OS classification instead of sentence-level
-# 3. Expanded entity/noun list
-# 4. Removed overly aggressive deduplication - counts each mention
+# Distrust
 
-# REFINED distrust verbs - focused on actual distrust/harmful intent
-# REMOVED: "question", "challenge", "oppose", "resist", "reject", "criticize"
-# These are too ambiguous and trigger in neutral/positive contexts
+# Distrust verbs - focused on actual distrust/harmful intent
 distrust_verbs <- c(
   # Core harmful action verbs (high confidence)
   "force", "harm", "hurt", "damage", "undermine", "threaten",
@@ -22,9 +15,7 @@ distrust_verbs <- c(
   "condemn", "denounce", "accuse", "blame"
 )
 
-# REFINED harmful nominals - focused on clear distrust indicators
-# REMOVED: fear, concern, worry, unease, apprehension (too general)
-# REMOVED: tension, tensions, crisis, crises (can be neutral)
+# Harmful nominals
 harmful_nominals <- c(
   # Clear harmful outcomes
   "trouble", "harm", "damage", "instability", "chaos", "violence", "unrest",
@@ -99,7 +90,7 @@ get_dist <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
   # Build country list
   country_list <- build_country_list()
 
-  # ---- own/other corpus ----
+  # Own/other corpus
   io_vec <- if (exists("io", inherits = TRUE)) get("io") else character(0)
 
   own_entity <- tolower(own_entity)
@@ -144,14 +135,14 @@ get_dist <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
                           "they", "their nation", "their country", "their state",
                           "their government", "their institution", "their party", "their people"))
 
-  # ---- parse ----
+  # Parse
   parsed <- spacyr::spacy_parse(text, dependency = TRUE, entity = TRUE, tag = TRUE)
   parsed <- parsed |> dplyr::mutate(
     token_lower = tolower(token),
     lemma_lower = tolower(lemma)
   )
 
-  # ---- Track quote spans (but don't skip sentences) ----
+  # Track quote spans (but don't skip sentences)
   parsed <- parsed |>
     dplyr::group_by(doc_id, sentence_id) |>
     dplyr::mutate(
@@ -161,7 +152,7 @@ get_dist <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     ) |>
     dplyr::ungroup()
 
-  # ---- entity grouping (multiword) ----
+  # Entity grouping (multiword)
   parsed <- parsed |>
     dplyr::mutate(ent_flag = ifelse(!is.na(entity) & entity != "", 1, NA)) |>
     dplyr::group_by(doc_id, sentence_id) |>
@@ -186,7 +177,7 @@ get_dist <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     dplyr::group_by(sentence_id) |>
     dplyr::summarise(sentence_text = paste(token, collapse = " "), .groups = "drop")
 
-  # ---- PER-ENTITY classification ----
+  # PER-ENTITY classification
   classify_entity <- function(entity_row, sentence_tokens, sentence_text_df) {
     token_id <- entity_row$token_id
     sent_id <- entity_row$sentence_id
@@ -238,11 +229,11 @@ get_dist <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     }
   }
 
-  # ---- Find all codeable entities ----
+  # Find all codeable entities
   parsed <- parsed |>
     dplyr::mutate(entity_clean = stringr::str_replace(entity, "_[BI]$", ""))
 
-  # FIX 2: Identify self-referential target nouns by checking preceding tokens
+  # Identify self-referential target nouns by checking preceding tokens
   self_ref_preceding <- c("our", "my", "this", "these")
 
   parsed <- parsed |>
@@ -253,7 +244,7 @@ get_dist <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     ) |>
     dplyr::ungroup()
 
-  # FIX 3: BALANCED entity detection
+  # BALANCED entity detection
   parsed <- parsed |>
     dplyr::mutate(noun_phrase_tmp = dplyr::coalesce(ent_phrase, token_lower))
 

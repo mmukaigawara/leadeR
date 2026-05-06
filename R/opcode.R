@@ -265,8 +265,6 @@ verbs_support <- c(
 
 # --- 5. PROMISE (+2) ---
 # Cooperative Words: Future commitments, treaty signing, and assurances.
-# REFINED: Removed generic intent/desire verbs that caused +4.94 overcounting
-# Focus on ACTUAL COMMITMENTS, not just expressions of intent or desire
 verbs_promise <- c(
   # Core commitment verbs (VICS Promise = binding commitments)
   "promise", "pledge", "assure", "guarantee", "warrant", "certify", "attest",
@@ -308,7 +306,6 @@ verbs_promise <- c(
 
 # --- 6. REWARD (+3) ---
 # Cooperative Deeds: Material aid, de-escalation actions, and granting rights.
-# BALANCED: Restored high-frequency material action verbs to fix Other Reward bias (0.39->target 0.7)
 verbs_reward <- c(
   # Core reward verbs (actual positive deeds)
   "reward", "award", "grant", "give", "donate", "contribute",

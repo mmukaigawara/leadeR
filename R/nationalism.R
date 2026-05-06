@@ -1,8 +1,4 @@
-# Nationalism - REFERENT-LEVEL VERSION (v3)
-# Key changes:
-# 1. Groups multi-word entities into single referents
-# 2. Only counts GPE entities (countries) - not NORP/ORG
-# 3. Very conservative pronoun counting
+# Nationalism
 
 # Modifier lists for own-country references
 favorable_descriptors <- c(

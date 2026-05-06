@@ -8,3 +8,4 @@
 *.Rcheck/
 inst/doc
 docs
+.positai

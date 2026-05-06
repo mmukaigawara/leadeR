@@ -1,12 +1,6 @@
-# Control - IMPROVED VERSION v2
-# Key changes:
-# 1. Uses DIRECT pronoun-verb linking via dependency parsing (not sentence-level)
-# 2. Expanded OC verb list based on codebook Comment #1
-# 3. Properly counts ALL verbs where I/we is the direct subject
+# Control
 
-# OC verb list - based on codebook Comment #1:
-# "feeling," "thinking," "sensory," and "being" verbs
-# These are verbs that do NOT indicate the speaker is taking initiative or control
+# OC verb list - based on codebook
 oc_verbs <- c(
   # Core codebook examples
   "believe", "consider", "feel", "think", "suspect", "wonder", "wish", "hope",
@@ -89,8 +83,7 @@ get_ctrl <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
   ## Define own pronouns (I/we and variants)
   own_pronouns <- c("i", "we")
 
-  ## FIX: Expanded self-reference nouns (possessive constructs)
-  ## "our government", "our nation", "our country", "the United States"
+  ## Expanded self-reference nouns (possessive constructs)
   own_entity_terms <- unique(tolower(c(own_entity, expand_aliases_country(own_entity))))
   self_nouns <- c("government", "nation", "country", "administration",
                    "state", "party", "congress", "people")
@@ -103,13 +96,13 @@ get_ctrl <- function(own_entity, text, bootstrap = FALSE, B = 1000) {
     dplyr::group_by(sentence_id) |>
     dplyr::summarise(sentence = paste(token, collapse = " "), .groups = "drop")
 
-  # NEW APPROACH: Find verbs where I/we OR self-referent noun is the subject
+  # Find verbs where I/we OR self-referent noun is the subject
   # Step 1a: Find all pronouns I/we that are subjects (nsubj or nsubjpass)
   pronoun_subjects <- parsed |>
     dplyr::filter(token_lower %in% own_pronouns) |>
     dplyr::filter(dep_rel %in% c("nsubj", "nsubjpass"))
 
-  # Step 1b: FIX - Find self-referent nouns preceded by "our/my" that are subjects
+  # Step 1b: Find self-referent nouns preceded by "our/my" that are subjects
   parsed <- parsed |>
     dplyr::group_by(doc_id, sentence_id) |>
     dplyr::mutate(prev_token = dplyr::lag(token_lower, default = "")) |>

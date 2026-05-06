@@ -1,12 +1,8 @@
-# Conceptual complexity - IMPROVED VERSION
-# Key changes:
-# 1. Expanded HC word list based on codebook
-# 2. Added more temporal/occasional phrases
-# 3. Better handling of word stems to catch variations
+# Conceptual complexity
 
-# HC STEMS - Full original list (bias was +8.68, targeting near-zero)
+# HC STEMS - Full original list
 hc_stems <- c(
-  # Core HC words from codebook (Line 32)
+  # Core HC words from codebook
   "admit", "almost", "also", "ambigu", "approximat", "aspect",
   "chang", "circumstanc", "clarif", "condition", "consid", "depend", "differ",
   "distinguish", "either", "except", "further", "general", "gradual", "however",
@@ -39,7 +35,7 @@ hc_stems <- c(
   "interpret", "analyz", "assess", "examin", "review"
 )
 
-# HC phrases - Nearly full original list
+# HC phrases
 hc_phrases <- c(
   # Phrases from codebook
   "among other things", "inter alia", "in the sense that", "in this case",
@@ -70,7 +66,6 @@ hc_phrases <- c(
   "assuming that", "given that", "on the assumption",
   "one possibility", "another option", "an alternative", "a different approach"
 
-  # REMOVED: "i believe", "i think", "we believe", etc. (overcounting)
 )
 
 # HC single words that should match exactly
@@ -113,9 +108,7 @@ low_complexity <- unique(c(
   "sure", "surely", "for sure"
 ))
 
-# ----------------------------
-# REGEX BUILDERS
-# ----------------------------
+# REGEX BUILDERS -----
 
 #' Prepare word-stem regex pattern
 #' @param stems Character vector of word stems.
@@ -168,9 +161,7 @@ hc_phrase_pattern <- prep_phrase_regex(hc_phrases)
 hc_exact_pattern <- prep_exact_regex(hc_words_exact)
 lc_pattern <- prep_lc_regex(low_complexity)
 
-# ----------------------------
-# QUOTE STRIPPING
-# ----------------------------
+# QUOTE STRIPPING -----
 
 #' Strip quoted text from a string
 #' @param x A character string.
@@ -186,9 +177,7 @@ strip_quoted <- function(x) {
   x
 }
 
-# ----------------------------
-# NEGATION-AWARE COUNTING
-# ----------------------------
+# NEGATION-AWARE COUNTING -----
 
 #' Count valid (non-negated) pattern matches
 #' @param txt A character string to search.
@@ -215,9 +204,7 @@ count_valid <- function(txt, pattern, window_chars = 40) {
   valid
 }
 
-# ----------------------------
-# MAIN FUNCTION
-# ----------------------------
+# MAIN FUNCTION -----
 
 #' Compute conceptual complexity scores
 #'
