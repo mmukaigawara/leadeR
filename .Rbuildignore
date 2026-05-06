@@ -9,3 +9,5 @@
 ^docs$
 ^pkgdown$
 ^\.positai$
+^CRAN-SUBMISSION$
+^cran-comments\.md$
