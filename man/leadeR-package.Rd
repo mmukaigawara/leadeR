@@ -16,6 +16,7 @@ analyses.
 
 Authors:
 \itemize{
+  \item Mitsuru Mukaigawara \email{mitsuru_mukaigawara@g.harvard.edu} (\href{https://orcid.org/0000-0001-6530-2083}{ORCID})
   \item Joshua Kertzer \email{jkertzer@gov.harvard.edu} (\href{https://orcid.org/0000-0002-7358-0638}{ORCID})
 }
 
