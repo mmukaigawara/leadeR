@@ -12,7 +12,7 @@ Authors@R: c(
            comment = c(ORCID = "0000-0002-7358-0638")))
 Description: Profiling leaders at a distance.
     You provide the text data and the package performs
-    Leadership Trait Analyses (LTA) and Operational Code Analyses (OCA).
+    Leadership Trait Analyses and Operational Code Analyses.
 License: MIT + file LICENSE
 LazyData: true
 Encoding: UTF-8
