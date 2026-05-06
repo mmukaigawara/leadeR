@@ -1,6 +1,6 @@
 Package: leadeR
 Title: Profiling Leaders at a Distance
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: c(
     person(given = "Mitsuru", family = "Mukaigawara", 
            email = "mitsuru_mukaigawara@g.harvard.edu", 
