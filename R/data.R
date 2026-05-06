@@ -1,43 +1,32 @@
-#' JFK Speech: New Dimensions of American Foreign Policy (November 1, 1957)
+#' JFK Speech: Inaugural Address (January 20, 1961)
 #'
-#' Full text of a speech by John F. Kennedy delivered on November 1, 1957,
-#' titled "New Dimensions of American Foreign Policy." The speech addresses
-#' post-Suez/Hungary crisis analysis, the Cold War, Soviet threat, economic
-#' development in underdeveloped countries, foreign aid policy, and NATO
-#' alliance dynamics.
+#' Full text of JFK's Inaugural Address on January 20, 1961.
 #'
 #' @format A character string containing the full text of the speech.
 #'
-#' @source \url{https://www.jfklibrary.org/archives/other-resources/john-f-kennedy-speeches/university-of-pennsylvania-19571101}
-"jfk19571101"
+#' @source \url{https://www.govinfo.gov/app/details/PPP-1961-book1}"jfk19610120".
+#' These original source texts are U.S. government works and are not subject to
+#' copyright protection in the United States under 17 U.S.C. § 105.
+#' The package authors do not claim copyright in the original presidential speech texts.
 
-#' JFK Speech: Los Angeles World Affairs Council (September 21, 1956)
+#' JFK Speech: Address Before the UN General Assembly (September 25, 1961)
 #'
-#' Full text of Senator John F. Kennedy's address to the Los Angeles World
-#' Affairs Council on September 21, 1956. Kennedy argues that foreign policy
-#' must not be ignored in the 1956 presidential campaign, warns against
-#' partisan distortion of international issues, and urges that campaign
-#' strategy should not alter the conduct of foreign policy. He highlights the
-#' rise of African-Asian nationalism as a force distinct from communism and
-#' criticizes both parties for failing to grasp its significance.
+#' Full text of JFK's address before the UN General Assembly on September 25, 1961.
 #'
 #' @format A character string containing the full text of the speech.
 #'
-#' @source \url{https://www.jfklibrary.org/archives/other-resources/john-f-kennedy-speeches/los-angeles-ca-world-affairs-council-19560921}
-"jfk19560921"
+#' @source \url{https://www.govinfo.gov/app/details/PPP-1961-book1}"jfk19610925"
+#' These original source texts are U.S. government works and are not subject to
+#' copyright protection in the United States under 17 U.S.C. § 105.
+#' The package authors do not claim copyright in the original presidential speech texts.
 
-#' JFK Speech: Imperialism -- The Enemy of Freedom (July 2, 1957)
+#' JFK Speech: Commencement Address at American University (June 10, 1963)
 #'
-#' Full text of Senator John F. Kennedy's address to the United States Senate
-#' on July 2, 1957. Kennedy calls on the United States to support Algerian
-#' self-determination and break with its policy of deferring to France on
-#' North African colonial questions. He reviews the failures of French policy
-#' in Algeria, Tunisia, and Morocco, draws parallels to the earlier collapse
-#' in Indochina, and submits a Senate resolution urging U.S. diplomatic
-#' efforts toward Algerian independence within a framework of economic
-#' interdependence with France.
+#' Full text of Senator John F. Kennedy's commentement address at American University on June 10, 1963.
 #'
 #' @format A character string containing the full text of the speech.
 #'
-#' @source \url{https://www.jfklibrary.org/archives/other-resources/john-f-kennedy-speeches/united-states-senate-imperialism-19570702}
-"jfk19570702"
+#' @source \url{https://www.govinfo.gov/app/details/PPP-1963-book1}"jfk19630610"
+#' These original source texts are U.S. government works and are not subject to
+#' copyright protection in the United States under 17 U.S.C. § 105.
+#' The package authors do not claim copyright in the original presidential speech texts.
