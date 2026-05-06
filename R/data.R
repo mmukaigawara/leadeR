@@ -22,7 +22,7 @@
 
 #' JFK Speech: Commencement Address at American University (June 10, 1963)
 #'
-#' Full text of Senator John F. Kennedy's commentement address at American University on June 10, 1963.
+#' Full text of Senator John F. Kennedy's commencement address at American University on June 10, 1963.
 #'
 #' @format A character string containing the full text of the speech.
 #'

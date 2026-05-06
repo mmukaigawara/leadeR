@@ -33,7 +33,7 @@
 #' \dontrun{
 #' spacyr::spacy_initialize()
 #' res <- data.table::rbindlist(
-#'   lapply(c(jfk19560921, jfk19570702, jfk19571101), function(x)
+#'   lapply(c(jfk19610120, jfk19610925, jfk19630610), function(x)
 #'     get_lta(own_entity = "United States", text = clean_text(x),
 #'             bootstrap = TRUE, B = 1000))
 #' )
