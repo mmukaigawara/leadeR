@@ -30,16 +30,28 @@
 #'   `typology`, and `method`.
 #' @export
 #' @examples
-#' \dontrun{
+#' # Simple-mean aggregation works on any data frame with the seven trait
+#' # columns; here we use a small illustrative input.
+#' example_lta <- data.frame(
+#'   Pp = c(0.45, 0.52, 0.48),
+#'   B  = c(0.40, 0.48, 0.43),
+#'   C  = c(0.60, 0.55, 0.58),
+#'   Ss = c(0.75, 0.82, 0.79),
+#'   Ta = c(0.62, 0.58, 0.65),
+#'   D  = c(0.35, 0.42, 0.38),
+#'   Na = c(0.38, 0.45, 0.41)
+#' )
+#' type_lta(example_lta)
+#'
+#' \donttest{
+#' # Precision-weighted aggregation needs per-trait variances, which come
+#' # from get_lta(..., bootstrap = TRUE). Requires spaCy to be installed.
 #' spacyr::spacy_initialize()
 #' res <- data.table::rbindlist(
 #'   lapply(c(jfk19610120, jfk19610925, jfk19630610), function(x)
 #'     get_lta(own_entity = "United States", text = clean_text(x),
 #'             bootstrap = TRUE, B = 1000))
 #' )
-#' # Simple mean aggregation
-#' type_lta(res)
-#' # Precision-weighted aggregation
 #' type_lta(res, precision_weighted = TRUE)
 #' }
 type_lta <- function(lta,

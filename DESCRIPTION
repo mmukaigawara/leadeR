@@ -10,9 +10,14 @@ Authors@R: c(
            email = "jkertzer@gov.harvard.edu", 
            role = "aut",
            comment = c(ORCID = "0000-0002-7358-0638")))
-Description: Profiling leaders at a distance.
-    You provide the text data and the package performs
-    Leadership Trait Analyses and Operational Code Analyses.
+Description: Profiles political leaders at a distance from text data
+    such as speeches, interviews, press conferences, and other public
+    statements. Computes Leadership Trait Analysis scores for seven
+    personality traits -- including need for power, conceptual complexity,
+    and self-confidence -- and classifies leaders into one of eight
+    leadership styles. Also computes Operational Code Analysis scores
+    summarising a leader's beliefs about politics and the use of power.
+URL: https://github.com/mmukaigawara/leadeR
 License: MIT + file LICENSE
 LazyData: true
 Encoding: UTF-8

@@ -22,7 +22,8 @@
 #'   `C`, `varC`, `Ta`, `varTa`, `Ss`, `varSs`, `Na`, `varNa`, `B`, `varB`).
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
+#' # Requires spaCy to be installed; see spacyr::spacy_install().
 #' spacyr::spacy_initialize()
 #' get_lta(own_entity = "United States", text = "We will defend our nation.")
 #' get_lta(own_entity = "United States", text = "We will defend our nation.",
