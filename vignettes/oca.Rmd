@@ -28,7 +28,7 @@ set.seed(02138)
 own_ent <- "United States"
 B <- 1000
 
-jfk <- clean_text(jfk19571101)
+jfk <- clean_text(jfk19610120)
 ```
 
 ## Computing OCA indices
