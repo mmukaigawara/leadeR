@@ -1,13 +1,13 @@
 # leadeR <a href="https://github.com/mmukaigawara/leadeR"><img src="man/figures/logo.png" align="right" height="200" alt="leadeR logo" /></a>
 
-<!-- badges: start
+<!-- badges: start -->
 [![CRAN
 status](https://www.r-pkg.org/badges/version/leadeR)](https://CRAN.R-project.org/package=leadeR)
 [![CRAN
 downloads](https://cranlogs.r-pkg.org/badges/leadeR)](https://cran.r-project.org/package=leadeR)
 [![CRAN total
 downloads](https://cranlogs.r-pkg.org/badges/grand-total/leadeR)](https://cran.r-project.org/package=leadeR)
-badges: end -->
+<!-- badges: end -->
 
 The goal of the package
 [leadeR](https://github.com/mmukaigawara/leadeR) is to profile political leaders based on 
@@ -37,3 +37,7 @@ You can install the package
 # install.packages("remotes")
 remotes::install_github("mmukaigawara/leadeR")
 ```
+
+## User's guide
+
+A user's guide is available [online](https://www.mitsurumukaigawara.com/leader/).
