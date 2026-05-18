@@ -38,6 +38,12 @@ You can install the package
 remotes::install_github("mmukaigawara/leadeR")
 ```
 
+and [CRAN](https://cran.r-project.org/package=leadeR) with:
+
+``` r
+install.packages("leadeR")
+```
+
 ## User's guide
 
 A user's guide is available [online](https://www.mitsurumukaigawara.com/leader/).
